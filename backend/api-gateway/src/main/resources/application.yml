@@ -1,0 +1,32 @@
+# Puerto 8090: el 8080 lo ocupa Keycloak (http://localhost:8080), así que el gateway no puede compartirlo.
+# Sin StripPrefix: cada microservicio expone sus rutas con el mismo prefijo /api/<servicio> que ve el cliente,
+# el gateway solo reenvía tal cual.
+server:
+  port: 8090
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: usuarios-ms
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/usuarios/**
+
+        - id: ingesta-ms
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/licitaciones/**
+
+        - id: coincidencias-ms
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/coincidencias/**
+
+        - id: notificaciones-ms
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/notificaciones/**
