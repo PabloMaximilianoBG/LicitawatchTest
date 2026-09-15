@@ -1,28 +1,30 @@
-# Secrets / env
+# Secrets
 .env
 *.env
-!*.env.example
+!.env.example
 
 # Java / Maven
 target/
 *.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
 
 # Node / frontend
 node_modules/
-frontend/dist/
-frontend/.vite/
+dist/
+dist-ssr/
+*.local
+
+# Logs
+logs/
+*.log
 
 # IDE
 .idea/
 *.iml
 .vscode/
-.settings/
-.classpath
-.project
+*.swp
 
 # OS
-Thumbs.db
 .DS_Store
-
-# Logs
-*.log
+Thumbs.db
