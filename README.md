@@ -1,4 +1,4 @@
-# LicitaWatch v2
+# LicitaWatch 
 
 Plataforma privada de gestión de licitaciones (Proyecto de título 2026).
 
