@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: ms-notificaciones-bs
+  profiles:
+    active: local
+  config:
+    import: "optional:file:../../.env[.properties],optional:file:./.env[.properties]"
+  mail:
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: ${SMTP_STARTTLS:true}
+      mail.smtp.connectiontimeout: 15000
+      mail.smtp.timeout: 30000
+      mail.smtp.writetimeout: 30000
+  thymeleaf:
+    cache: true
+
+licitawatch:
+  internal:
+    api-key: ${INTERNAL_API_KEY}
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  mail:
+    from: ${SMTP_FROM:no-reply@licitawatch.local}
+    from-name: LicitaWatch
+    soporte: ${SOPORTE_EMAIL:${SMTP_FROM:soporte@licitawatch.local}}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+server:
+  port: ${MS_NOTIFICACIONES_BS_PORT:8214}
+  address: 127.0.0.1
+licitawatch:
+  servicios:
+    notificaciones-bd: ${NOTIFICACIONES_BD_URL:http://localhost:8314}
+    usuarios-bs: ${USUARIOS_BS_URL:http://localhost:8211}
+    ventas-bs: ${VENTAS_BS_URL:http://localhost:8213}

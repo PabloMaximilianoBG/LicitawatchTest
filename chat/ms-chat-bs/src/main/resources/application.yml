@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: ms-chat-bs
+  profiles:
+    active: local
+  config:
+    import: "optional:file:../../.env[.properties],optional:file:./.env[.properties]"
+
+licitawatch:
+  internal:
+    api-key: ${INTERNAL_API_KEY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+server:
+  port: ${MS_CHAT_BS_PORT:8216}
+  address: 127.0.0.1
+licitawatch:
+  servicios:
+    chat-bd: ${CHAT_BD_URL:http://localhost:8316}
+    licitaciones-bs: ${LICITACIONES_BS_URL:http://localhost:8212}
+    usuarios-bs: ${USUARIOS_BS_URL:http://localhost:8211}
+    notificaciones-bs: ${NOTIFICACIONES_BS_URL:http://localhost:8214}

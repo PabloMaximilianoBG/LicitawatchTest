@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: ms-chat-bd
+  profiles:
+    active: local
+  config:
+    import: "optional:file:../../.env[.properties],optional:file:./.env[.properties]"
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${DB_CHAT_NAME:chat_bd}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+licitawatch:
+  internal:
+    api-key: ${INTERNAL_API_KEY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+server:
+  port: ${MS_CHAT_BD_PORT:8316}
+  address: 127.0.0.1

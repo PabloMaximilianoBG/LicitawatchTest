@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: ms-licitaciones-bff
+  profiles:
+    active: local
+  config:
+    import: "optional:file:../../.env[.properties],optional:file:./.env[.properties]"
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+
+licitawatch:
+  internal:
+    api-key: ${INTERNAL_API_KEY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+server:
+  port: ${MS_LICITACIONES_BFF_PORT:8112}
+  address: 127.0.0.1
+licitawatch:
+  servicios:
+    licitaciones-bs: ${LICITACIONES_BS_URL:http://localhost:8212}

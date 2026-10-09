@@ -1,65 +1,46 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
-import { useAuthStore } from "../store/authStore";
+import axios, { AxiosError } from 'axios'
+import type { ApiError } from '@/types'
+import { useAuth } from '@/store/auth'
+import { toast } from '@/store/toast'
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL as string;
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 
-const apiClient = axios.create({ baseURL: BASE_URL });
+/** El frontend habla SOLO con el api-gateway (PPT diap. 11). */
+export const api = axios.create({ baseURL: API_BASE_URL, timeout: 120_000 })
 
-apiClient.interceptors.request.use((config) => {
-  const { accessToken } = useAuthStore.getState();
-  if (accessToken) {
-    config.headers.set("Authorization", `Bearer ${accessToken}`);
-  }
-  return config;
-});
+api.interceptors.request.use((config) => {
+  const token = useAuth.getState().token
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
 
-type RequestConRetry = InternalAxiosRequestConfig & { _retry?: boolean };
-
-let refrescoEnCurso: Promise<string | null> | null = null;
-
-async function refrescarToken(): Promise<string | null> {
-  const { refreshToken, setAccessToken, cerrarSesion } = useAuthStore.getState();
-  if (!refreshToken) return null;
-  try {
-    const { data } = await axios.post(`${BASE_URL}/api/auth/refresh`, { refreshToken });
-    setAccessToken(data.accessToken, data.refreshToken);
-    return data.accessToken as string;
-  } catch {
-    cerrarSesion();
-    return null;
-  }
-}
-
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
-    const original = error.config as RequestConRetry | undefined;
-    const esLoginORefresh = original?.url?.includes("/api/auth/login") || original?.url?.includes("/api/auth/refresh");
-
-    if (error.response?.status === 401 && original && !original._retry && !esLoginORefresh) {
-      original._retry = true;
-      if (!refrescoEnCurso) {
-        refrescoEnCurso = refrescarToken().finally(() => {
-          refrescoEnCurso = null;
-        });
+api.interceptors.response.use(
+  (r) => r,
+  (error: AxiosError<ApiError>) => {
+    const status = error.response?.status
+    const url = error.config?.url ?? ''
+    if (status === 401 && !url.includes('/api/auth/')) {
+      useAuth.getState().logout()
+      toast.error('Tu sesión expiró o no es válida. Inicia sesión nuevamente.')
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.assign(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`)
       }
-      const nuevoToken = await refrescoEnCurso;
-      if (nuevoToken) {
-        original.headers.set("Authorization", `Bearer ${nuevoToken}`);
-        return apiClient(original);
-      }
+    } else if (status === 429) {
+      toast.error(error.response?.data?.mensaje ?? 'Demasiadas solicitudes. Intenta en unos segundos.')
+    } else if (!error.response) {
+      toast.error('No se pudo conectar con LicitaWatch. Verifica que el api-gateway esté en ejecución.')
     }
-    return Promise.reject(error);
-  }
-);
+    return Promise.reject(error)
+  },
+)
 
-export default apiClient;
-
-export function obtenerMensajeError(error: unknown, fallback = "Ocurrió un error inesperado."): string {
-  if (axios.isAxiosError(error)) {
-    const data = error.response?.data as { mensaje?: string; detalles?: string[] } | undefined;
-    if (data?.detalles?.length) return data.detalles.join(" · ");
-    if (data?.mensaje) return data.mensaje;
+/** Normaliza cualquier error al formato de error de la API ({codigo, mensaje, errores}). */
+export function apiError(e: unknown): ApiError {
+  const err = e as AxiosError<ApiError>
+  const data = err?.response?.data
+  if (data && typeof data === 'object' && 'mensaje' in data) {
+    return { status: err.response!.status, codigo: data.codigo, mensaje: data.mensaje, errores: data.errores }
   }
-  return fallback;
+  if (err?.response) return { status: err.response.status, mensaje: 'Ocurrió un error inesperado.' }
+  return { status: 0, mensaje: 'No se pudo conectar con el servidor.' }
 }

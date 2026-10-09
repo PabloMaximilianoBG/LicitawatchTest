@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: api-gateway
+  profiles:
+    active: local
+  config:
+    import: "optional:file:../.env[.properties],optional:file:./.env[.properties]"
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 60s
+      routes:
+        - id: bff-usuarios
+          uri: ${USUARIOS_BFF_URL:http://localhost:8111}
+          predicates:
+            - Path=/api/auth/**,/api/usuarios/**,/api/catalogos/**,/api/admin/usuarios/**,/api/admin/catalogos/**
+        - id: bff-licitaciones
+          uri: ${LICITACIONES_BFF_URL:http://localhost:8112}
+          predicates:
+            - Path=/api/licitaciones/**,/api/postulaciones/**,/api/admin/licitaciones/**,/api/admin/postulaciones/**
+        - id: bff-ventas
+          uri: ${VENTAS_BFF_URL:http://localhost:8113}
+          predicates:
+            - Path=/api/planes/**,/api/suscripciones/**,/api/ventas/**,/api/pagos/**,/api/admin/ventas/**,/api/admin/suscripciones/**
+          metadata:
+            response-timeout: 90000
+        - id: bff-notificaciones
+          uri: ${NOTIFICACIONES_BFF_URL:http://localhost:8114}
+          predicates:
+            - Path=/api/notificaciones/**,/api/soporte/**,/api/admin/notificaciones/**
+        - id: bff-asistente
+          uri: ${ASISTENTE_BFF_URL:http://localhost:8115}
+          predicates:
+            - Path=/api/asistente/**
+          metadata:
+            response-timeout: 120000
+        - id: bff-chat
+          uri: ${CHAT_BFF_URL:http://localhost:8116}
+          predicates:
+            - Path=/api/chat/**
+
+licitawatch:
+  jwt:
+    secret: ${JWT_SECRET}
+  internal:
+    api-key: ${INTERNAL_API_KEY}
+  cors:
+    origenes: ${FRONTEND_URL:http://localhost:5173}
+  rate-limit:
+    general-per-minute: ${RATE_LIMIT_GENERAL_PER_MINUTE:300}
+    auth-per-minute: ${RATE_LIMIT_AUTH_PER_MINUTE:30}
+    asistente-per-minute: ${RATE_LIMIT_ASISTENTE_PER_MINUTE:20}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+server:
+  port: ${GATEWAY_PORT:8080}
+  address: ${GATEWAY_BIND_ADDRESS:127.0.0.1}

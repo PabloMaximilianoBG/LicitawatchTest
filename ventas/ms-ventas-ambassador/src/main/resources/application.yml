@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: ms-ventas-ambassador
+  profiles:
+    active: local
+  config:
+    import: "optional:file:../../.env[.properties],optional:file:./.env[.properties]"
+
+licitawatch:
+  internal:
+    api-key: ${INTERNAL_API_KEY}
+  webpay:
+    commerce-code: ${WEBPAY_COMMERCE_CODE:597055555532}
+    api-key: ${WEBPAY_API_KEY:579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C}
+    # SANDBOX = ambiente de integración de Transbank (sin cobros reales)
+    environment: ${WEBPAY_ENVIRONMENT:SANDBOX}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+server:
+  port: ${MS_VENTAS_AMBASSADOR_PORT:8413}
+  address: 127.0.0.1

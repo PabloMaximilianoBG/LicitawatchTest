@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: ms-asistente-bs
+  profiles:
+    active: local
+  config:
+    import: "optional:file:../../.env[.properties],optional:file:./.env[.properties]"
+
+licitawatch:
+  internal:
+    api-key: ${INTERNAL_API_KEY}
+  groq:
+    base-url: ${GROQ_API_BASE_URL:https://api.groq.com/openai/v1}
+    api-key: ${GROQ_API_KEY:}
+    model: ${GROQ_MODEL:openai/gpt-oss-120b}
+    timeout-seconds: 60
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+server:
+  port: ${MS_ASISTENTE_BS_PORT:8215}
+  address: 127.0.0.1
+licitawatch:
+  servicios:
+    usuarios-bs: ${USUARIOS_BS_URL:http://localhost:8211}
+    licitaciones-bs: ${LICITACIONES_BS_URL:http://localhost:8212}
+    ventas-bs: ${VENTAS_BS_URL:http://localhost:8213}

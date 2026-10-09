@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: ms-asistente-bff
+  profiles:
+    active: local
+  config:
+    import: "optional:file:../../.env[.properties],optional:file:./.env[.properties]"
+
+licitawatch:
+  internal:
+    api-key: ${INTERNAL_API_KEY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+server:
+  port: ${MS_ASISTENTE_BFF_PORT:8115}
+  address: 127.0.0.1
+licitawatch:
+  servicios:
+    asistente-bs: ${ASISTENTE_BS_URL:http://localhost:8215}

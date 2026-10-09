@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: ms-usuarios-bs
+  profiles:
+    active: local
+  config:
+    import: "optional:file:../../.env[.properties],optional:file:./.env[.properties]"
+
+licitawatch:
+  internal:
+    api-key: ${INTERNAL_API_KEY}
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-minutes: ${JWT_EXPIRATION:60}
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  admin-inicial:
+    email: ${ADMIN_EMAIL:admin@licitawatch.local}
+    password: ${ADMIN_PASSWORD:}
+    nombre: ${ADMIN_NAME:Administrador}
+    area: ${ADMIN_AREA:Administracion}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+server:
+  port: ${MS_USUARIOS_BS_PORT:8211}
+  address: 127.0.0.1
+licitawatch:
+  servicios:
+    usuarios-bd: ${USUARIOS_BD_URL:http://localhost:8311}
+    ventas-bs: ${VENTAS_BS_URL:http://localhost:8213}
+    notificaciones-bs: ${NOTIFICACIONES_BS_URL:http://localhost:8214}

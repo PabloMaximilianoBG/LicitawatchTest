@@ -1,0 +1,62 @@
+spring:
+  application:
+    name: ms-ventas-bs
+  profiles:
+    active: local
+  config:
+    import: "optional:file:../../.env[.properties],optional:file:./.env[.properties]"
+
+licitawatch:
+  internal:
+    api-key: ${INTERNAL_API_KEY}
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  webpay:
+    return-url: ${WEBPAY_RETURN_URL:http://localhost:8080/api/pagos/webpay/retorno}
+  # PPT diap. 7. La BD (ER) no guarda precio, vigencia ni beneficios: se configuran aquí.
+  planes:
+    estandar:
+      postulaciones-mes: ${ESTANDAR_POSTULACIONES_MES:3}
+      beneficios:
+        - Búsqueda y filtros de licitaciones sin límite
+        - Hasta 3 postulaciones al mes
+        - Chat privado con el Licitador al adjudicarle una licitación
+        - Soporte estándar
+    premium:
+      precio: ${PREMIUM_PRECIO:24990}
+      vigencia-dias: ${PREMIUM_VIGENCIA_DIAS:30}
+      postulaciones-mes: ${PREMIUM_POSTULACIONES_MES:7}
+      beneficios:
+        - Todo lo de Estándar
+        - Hasta 7 postulaciones al mes
+        - Acceso a LicitAsist, el asistente con IA
+        - Prioridad de visibilidad en resultados
+        - Alertas por correo de licitaciones de su rubro
+        - Insignia Premium visible en su perfil
+        - Soporte prioritario
+  vencimiento:
+    cron: "0 15 0 * * *"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+server:
+  port: ${MS_VENTAS_BS_PORT:8213}
+  address: 127.0.0.1
+licitawatch:
+  servicios:
+    ventas-bd: ${VENTAS_BD_URL:http://localhost:8313}
+    ventas-ambassador: ${VENTAS_AMBASSADOR_URL:http://localhost:8413}
+    usuarios-bs: ${USUARIOS_BS_URL:http://localhost:8211}
+    notificaciones-bs: ${NOTIFICACIONES_BS_URL:http://localhost:8214}

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LicitaWatch · Propuesta de modelo de datos v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #13284b; --navy-2: #1c3a6b; --gold: #c9973a; --ink: #1e293b; --muted: #5b6b82;
+    --line: #dbe3ee; --bg: #f5f7fa; --card: #ffffff; --soft: #f1ead9;
+    --new: #0f8a5f; --new-bg: #e3f5ec; --mod: #b7791f; --mod-bg: #fdf3e1; --ppt: #1d4ed8; --ppt-bg: #e6eefc;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: Inter, system-ui, sans-serif; line-height: 1.55; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 20px; }
+  header.hero { background: var(--navy); color: #fff; padding: 56px 0 46px; }
+  .eyebrow { color: var(--gold); font-weight: 700; letter-spacing: .14em; font-size: 13px; text-transform: uppercase; }
+  h1, h2 { font-family: "Source Serif 4", Georgia, serif; }
+  h1 { font-size: clamp(30px, 4.6vw, 48px); margin: 10px 0 12px; line-height: 1.1; }
+  .hero p { max-width: 820px; color: #cdd7e6; font-size: 17px; margin: 0; }
+  nav.toc { position: sticky; top: 0; z-index: 5; background: #fff; border-bottom: 1px solid var(--line); }
+  nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding-top: 10px; padding-bottom: 10px; }
+  nav.toc a { white-space: nowrap; text-decoration: none; color: var(--navy); font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: 999px; }
+  nav.toc a:hover { background: var(--ppt-bg); }
+  section { padding: 44px 0 10px; }
+  h2 { font-size: clamp(24px, 3.2vw, 34px); margin: 6px 0 8px; color: var(--navy); }
+  .lead { color: var(--muted); font-style: italic; margin: 0 0 22px; font-size: 16px; }
+  .grid { display: grid; gap: 18px; }
+  .g2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .g3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .box { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; }
+  .box h3 { margin: 0 0 8px; color: var(--navy); font-size: 17px; }
+  .box p, .box li { color: #334155; font-size: 14.5px; }
+  .box ul { margin: 6px 0 0; padding-left: 18px; }
+  .note { background: var(--soft); border-radius: 10px; padding: 16px 22px; margin: 18px 0; font-size: 15px; }
+  .db-title { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 30px 0 14px; }
+  .db-title h3 { margin: 0; font-size: 20px; color: var(--navy); font-family: "Source Serif 4", serif; }
+  .chip { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; letter-spacing: .02em; }
+  .chip.ppt { background: var(--ppt-bg); color: var(--ppt); }
+  .chip.new { background: var(--new-bg); color: var(--new); }
+  .chip.mod { background: var(--mod-bg); color: var(--mod); }
+  .chip.db { background: #e8edf5; color: var(--navy); font-family: ui-monospace, Consolas, monospace; }
+  /* Tarjetas de tabla (estilo PPT) */
+  .tables { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
+  .tbl { background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+  .tbl-h { background: var(--navy); color: #fff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .tbl-h b { font-family: ui-monospace, Consolas, monospace; font-size: 15px; letter-spacing: .02em; }
+  .tbl-h .chip { font-size: 10.5px; }
+  .tbl table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl td { padding: 6.5px 16px; border-bottom: 1px solid #eef2f7; vertical-align: top; }
+  .tbl tr:last-child td { border-bottom: 0; }
+  .tbl td:first-child { font-family: ui-monospace, Consolas, monospace; color: #0f172a; width: 52%; word-break: break-word; }
+  .tbl td:last-child { color: var(--muted); }
+  .k { font-weight: 700; font-size: 11px; color: var(--gold); }
+  .fk { font-weight: 700; font-size: 11px; color: var(--ppt); }
+  .ref { font-weight: 700; font-size: 11px; color: #7c3aed; }
+  .tbl .desc { padding: 10px 16px 12px; font-size: 12.5px; color: var(--muted); border-top: 1px solid #eef2f7; margin-top: auto; background: #fafbfd; }
+  .tbl.new .tbl-h { background: #0e5c43; }
+  .tbl.mod .tbl-h { background: #7a5212; }
+  .tbl.cat .tbl-h { background: #475569; }
+  /* Diagramas */
+  .diagram { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; overflow-x: auto; }
+  .diagram .mermaid { text-align: center; margin: 0; }
+  .diagram .mermaid svg { max-width: none; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+  /* Tabla comparativa */
+  table.cmp { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 14px; }
+  table.cmp th { background: var(--navy); color: #fff; text-align: left; padding: 11px 14px; font-weight: 600; }
+  table.cmp td { padding: 10px 14px; border-top: 1px solid #eef2f7; vertical-align: top; }
+  table.cmp td:first-child { font-family: ui-monospace, Consolas, monospace; white-space: nowrap; color: var(--navy); }
+  .cmp-wrap { overflow-x: auto; }
+  /* Flujo */
+  .flow { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); counter-reset: paso; }
+  .step { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; position: relative; }
+  .step::before { counter-increment: paso; content: counter(paso); position: absolute; top: -12px; left: 16px; background: var(--gold); color: #fff; font-weight: 700; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; }
+  .step h4 { margin: 8px 0 4px; color: var(--navy); font-size: 15px; }
+  .step p { margin: 0; font-size: 13.5px; color: #475569; }
+  .plan-card { border-left: 4px solid var(--gold); }
+  .pill-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .pill-list span { background: #eef2f7; padding: 4px 10px; border-radius: 6px; font-size: 13px; }
+  footer { padding: 40px 0 60px; color: var(--muted); font-size: 13px; text-align: center; }
+  @media print {
+    nav.toc { display: none; }
+    body { background: #fff; }
+    section { break-inside: avoid-page; }
+    .tbl, .box, .step { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">LicitaWatch · Propuesta de modelo de datos v2</div>
+    <h1>Usuarios, empresas y sistema: un modelo normalizado y persistente</h1>
+    <p>Propuesta de diseño basada en la nueva presentación: solo las Pymes pagan, el registro guarda datos completos de la empresa (RUT empresa, dueño y contacto comercial) y el chat Pyme ↔ Licitador se activa cuando el licitador acepta la postulación. Se conserva el núcleo de identidad de la diapositiva 12 y la regla de una base de datos por microservicio.</p>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#decisiones">Decisiones</a>
+    <a href="#er-global">ER global</a>
+    <a href="#usuarios">Service Usuarios</a>
+    <a href="#licitaciones">Service Licitaciones</a>
+    <a href="#ventas">Service Ventas</a>
+    <a href="#notificaciones">Service Notificaciones</a>
+    <a href="#registro">Datos del registro</a>
+    <a href="#chat">Flujo del chat</a>
+    <a href="#normalizacion">Normalización</a>
+    <a href="#cambios">Cambios vs PPT</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ===================================================== DECISIONES -->
+<section id="decisiones">
+  <div class="eyebrow">Decisiones de diseño</div>
+  <h2>Qué cambia y por qué</h2>
+  <p class="lead">Cuatro decisiones guían el modelo; todas salen de la nueva PPT y de los requisitos del registro.</p>
+  <div class="grid g2">
+    <div class="box">
+      <h3>1 · Pyme y Licitador comparten la misma estructura de empresa</h3>
+      <p>Ambos son personas jurídicas: tienen RUT de empresa, razón social, giro, dirección, dueño y contacto comercial. Esos datos viven <b>una sola vez</b> en tablas comunes (<code>empresa</code>, <code>persona</code>, <code>empresa_persona</code>, <code>direccion_empresa</code>). Cada perfil guarda solo lo que lo diferencia:</p>
+      <ul>
+        <li><b>Pyme:</b> tamaño, cantidad de trabajadores y rubros que ofrece (sirven para filtrar, recomendar y para LicitAsist).</li>
+        <li><b>Licitador:</b> tipo de organización (empresa privada, corporación, fundación…).</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>2 · El RUT del perfil es el RUT de la empresa</h3>
+      <p>El RUT que pide el registro es el <b>RUT de la empresa</b> (no el personal) y es único en todo el sistema. El RUT personal del dueño es opcional y se guarda aparte, en <code>persona</code>. Así una misma persona puede ser dueña o contacto de más de una empresa sin duplicar sus datos.</p>
+    </div>
+    <div class="box">
+      <h3>3 · Solo pagan las Pymes</h3>
+      <p>Las suscripciones, ventas y pagos pertenecen solo a usuarios Pyme. El Licitador publica sin plan ni límites.</p>
+      <ul>
+        <li><b>Estándar:</b> 3 postulaciones por mes y búsqueda con límite mensual.</li>
+        <li><b>Premium ($24.990):</b> 10 postulaciones por mes, prioridad de visibilidad, LicitAsist y chat con licitadores.</li>
+      </ul>
+      <p>Los beneficios se guardan uno por fila.</p>
+    </div>
+    <div class="box">
+      <h3>4 · El chat se abre cuando el licitador acepta</h3>
+      <p>La postulación suma el estado <b>ACEPTADA</b>. Cuando el licitador acepta a una Pyme Premium, se crea una <code>conversacion</code> ligada a esa postulación y desde ahí ambos intercambian <code>mensaje</code>s. El chat vive dentro del Service Licitaciones, porque pertenece a una postulación, y así no se crea un microservicio nuevo.</p>
+    </div>
+  </div>
+  <div class="note"><b>Reglas que se mantienen:</b> PostgreSQL; una base de datos por microservicio; las referencias entre servicios (<code>licitador_id</code>, <code>pyme_id</code>, <code>usuario_id</code>) son IDs simples validados por API y no llaves foráneas entre bases; las contraseñas se guardan solo como hash BCrypt; nunca se guarda el número completo de la tarjeta.</div>
+</section>
+
+<!-- ===================================================== ER GLOBAL -->
+<section id="er-global">
+  <div class="eyebrow">Vista general</div>
+  <h2>Modelo entidad-relación por microservicio</h2>
+  <p class="lead">Las líneas continuas son llaves foráneas dentro de una misma base. Las referencias entre servicios no son FK: se validan por API.</p>
+  <div class="diagram">
+<pre class="mermaid">
+flowchart LR
+  subgraph U["Service Usuarios · licitawatch_usuarios"]
+    usuario[usuario] --- empresa[empresa]
+    empresa --- persona[persona]
+  end
+  subgraph L["Service Licitaciones · licitawatch_licitaciones"]
+    licitacion[licitacion] --- postulacion[postulacion]
+    postulacion --- conversacion[conversacion]
+  end
+  subgraph V["Service Ventas · licitawatch_ventas"]
+    suscripcion[suscripcion] --- venta[venta] --- pago[pago]
+  end
+  subgraph N["Service Notificaciones · licitawatch_notificaciones"]
+    notificacion[notificacion]
+  end
+  licitacion -. "licitador_id (ref. API)" .-> usuario
+  postulacion -. "pyme_id (ref. API)" .-> usuario
+  suscripcion -. "usuario_id · solo PYME (ref. API)" .-> usuario
+  notificacion -. "usuario_id (ref. API)" .-> usuario
+</pre>
+  </div>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--navy)"></i>Tabla del modelo PPT</span>
+    <span><i class="sw" style="background:#7a5212"></i>Tabla PPT modificada</span>
+    <span><i class="sw" style="background:#0e5c43"></i>Tabla nueva</span>
+    <span><i class="sw" style="background:#475569"></i>Catálogo</span>
+    <span><b class="k">PK</b> llave primaria · <b class="fk">FK</b> llave foránea · <b class="ref">REF</b> referencia a otro servicio</span>
+  </div>
+</section>
+
+<!-- ===================================================== USUARIOS -->
+<section id="usuarios">
+  <div class="eyebrow">Modelo de datos · Service Usuarios</div>
+  <h2>El núcleo de identidad + la empresa</h2>
+  <p class="lead">Un usuario base, especializado por rol y vinculado a una empresa con su dueño y su contacto comercial.</p>
+  <div class="grid">
+    <div class="diagram">
+      <h3 style="margin:0 0 8px;color:var(--navy);font-size:15px">A · Identidad y perfiles</h3>
+<pre class="mermaid">
+erDiagram
+  ROL ||--o{ USUARIO : "asigna"
+  USUARIO ||--|| CREDENCIAL : "autentica"
+  USUARIO ||--o{ TOKEN_VERIFICACION : "confirma"
+  USUARIO ||--o| LICITADOR : "es"
+  USUARIO ||--o| PYME : "es"
+  USUARIO ||--o| ADMINISTRADOR : "es"
+  PERSONA ||--o| ADMINISTRADOR : "datos de"
+</pre>
+    </div>
+    <div class="diagram">
+      <h3 style="margin:0 0 8px;color:var(--navy);font-size:15px">B · Empresa, personas y ubicación</h3>
+<pre class="mermaid">
+erDiagram
+  EMPRESA ||--o| LICITADOR : "perfil de"
+  EMPRESA ||--o| PYME : "perfil de"
+  EMPRESA ||--o{ EMPRESA_PERSONA : "tiene"
+  PERSONA ||--o{ EMPRESA_PERSONA : "dueno / contacto"
+  EMPRESA ||--o{ DIRECCION_EMPRESA : "ubicada en"
+  COMUNA ||--o{ DIRECCION_EMPRESA : "contiene"
+  REGION ||--o{ COMUNA : "agrupa"
+  EMPRESA ||--o{ EMPRESA_RUBRO : "opera en"
+  RUBRO ||--o{ EMPRESA_RUBRO : "clasifica"
+</pre>
+    </div>
+  </div>
+
+  <div class="db-title"><h3>Tablas</h3><span class="chip db">licitawatch_usuarios</span></div>
+  <div class="tables">
+    <div class="tbl"><div class="tbl-h"><b>rol</b><span class="chip ppt">PPT</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>nombre</td><td>enum · LICITADOR / PYME / ADMINISTRADOR · UNIQUE</td></tr></table>
+      <div class="desc">Sin cambios respecto de la diapositiva 12.</div></div>
+
+    <div class="tbl"><div class="tbl-h"><b>usuario</b><span class="chip ppt">PPT</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>email</td><td>UNIQUE · correo de acceso</td></tr><tr><td>rol_id</td><td><span class="fk">FK</span> → rol</td></tr><tr><td>activo</td><td>bool</td></tr></table>
+      <div class="desc">Cuenta de acceso única. Sin cambios.</div></div>
+
+    <div class="tbl new"><div class="tbl-h"><b>credencial</b><span class="chip new">NUEVA</span></div>
+      <table><tr><td>usuario_id</td><td><span class="k">PK</span> <span class="fk">FK</span> → usuario (1:1)</td></tr><tr><td>password_hash</td><td>texto · BCrypt</td></tr><tr><td>email_confirmado</td><td>bool</td></tr><tr><td>creado_en / ultimo_login</td><td>timestamp</td></tr></table>
+      <div class="desc">Separa la seguridad del usuario base. La contraseña nunca se guarda en claro.</div></div>
+
+    <div class="tbl new"><div class="tbl-h"><b>token_verificacion</b><span class="chip new">NUEVA</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>usuario_id</td><td><span class="fk">FK</span> → usuario</td></tr><tr><td>token_hash</td><td>UNIQUE · SHA-256</td></tr><tr><td>expira_en / usado_en</td><td>timestamp</td></tr></table>
+      <div class="desc">Confirmación de correo: enlace seguro con expiración y de un solo uso.</div></div>
+
+    <div class="tbl new"><div class="tbl-h"><b>empresa</b><span class="chip new">NUEVA</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>rut_empresa</td><td>UNIQUE · RUT de la empresa</td></tr><tr><td>razon_social</td><td>texto</td></tr><tr><td>nombre_fantasia</td><td>texto</td></tr><tr><td>giro</td><td>texto</td></tr><tr><td>telefono</td><td>texto</td></tr><tr><td>email_corporativo</td><td>texto</td></tr><tr><td>sitio_web</td><td>texto</td></tr><tr><td>fecha_inicio_actividades</td><td>date</td></tr></table>
+      <div class="desc">Datos legales comunes a Pyme y Licitador. Un solo lugar para el RUT de empresa.</div></div>
+
+    <div class="tbl mod"><div class="tbl-h"><b>licitador</b><span class="chip mod">PPT MODIFICADA</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>usuario_id</td><td><span class="fk">FK</span>/UNIQUE → usuario</td></tr><tr><td>empresa_id</td><td><span class="fk">FK</span>/UNIQUE → empresa</td></tr><tr><td>tipo_organizacion</td><td>enum · privada / corporación / fundación…</td></tr></table>
+      <div class="desc"><b>razon_social</b> y <b>rut</b> pasan a <i>empresa</i>.</div></div>
+
+    <div class="tbl mod"><div class="tbl-h"><b>pyme</b><span class="chip mod">PPT MODIFICADA</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>usuario_id</td><td><span class="fk">FK</span>/UNIQUE → usuario</td></tr><tr><td>empresa_id</td><td><span class="fk">FK</span>/UNIQUE → empresa</td></tr><tr><td>tamano</td><td>enum · micro / pequeña / mediana</td></tr><tr><td>cantidad_trabajadores</td><td>entero</td></tr></table>
+      <div class="desc"><b>rut</b> pasa a <i>empresa</i>; <b>nombre_contacto</b> pasa a <i>persona</i> como contacto comercial.</div></div>
+
+    <div class="tbl mod"><div class="tbl-h"><b>administrador</b><span class="chip mod">PPT MODIFICADA</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>usuario_id</td><td><span class="fk">FK</span>/UNIQUE → usuario</td></tr><tr><td>persona_id</td><td><span class="fk">FK</span>/UNIQUE → persona</td></tr><tr><td>area</td><td>texto</td></tr></table>
+      <div class="desc">Agrega <i>persona_id</i> para conocer el nombre del administrador sin duplicarlo.</div></div>
+
+    <div class="tbl new"><div class="tbl-h"><b>persona</b><span class="chip new">NUEVA</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>rut_persona</td><td>UNIQUE · opcional</td></tr><tr><td>nombres</td><td>texto</td></tr><tr><td>apellido_paterno</td><td>texto</td></tr><tr><td>apellido_materno</td><td>texto</td></tr><tr><td>email</td><td>texto</td></tr><tr><td>telefono</td><td>texto</td></tr></table>
+      <div class="desc">Personas naturales: dueño, contacto comercial y administradores.</div></div>
+
+    <div class="tbl new"><div class="tbl-h"><b>empresa_persona</b><span class="chip new">NUEVA</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>empresa_id</td><td><span class="fk">FK</span> → empresa</td></tr><tr><td>persona_id</td><td><span class="fk">FK</span> → persona</td></tr><tr><td>tipo_vinculo</td><td>enum · DUEÑO / CONTACTO_COMERCIAL</td></tr><tr><td>cargo</td><td>texto · ej. Gerente comercial</td></tr><tr><td>es_principal</td><td>bool</td></tr></table>
+      <div class="desc">Relación N:M con atributos. UNIQUE (empresa, persona, tipo) y un único principal por tipo.</div></div>
+
+    <div class="tbl new"><div class="tbl-h"><b>direccion_empresa</b><span class="chip new">NUEVA</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>empresa_id</td><td><span class="fk">FK</span> → empresa</td></tr><tr><td>tipo</td><td>enum · casa matriz / sucursal / facturación</td></tr><tr><td>calle · numero · depto</td><td>texto</td></tr><tr><td>comuna_id</td><td><span class="fk">FK</span> → comuna</td></tr></table>
+      <div class="desc">La región se obtiene a través de la comuna (no se repite).</div></div>
+
+    <div class="tbl new"><div class="tbl-h"><b>empresa_rubro</b><span class="chip new">NUEVA</span></div>
+      <table><tr><td>empresa_id</td><td><span class="k">PK</span> <span class="fk">FK</span> → empresa</td></tr><tr><td>rubro_id</td><td><span class="k">PK</span> <span class="fk">FK</span> → rubro</td></tr></table>
+      <div class="desc">Rubros en los que opera la empresa (N:M). Clave para recomendar licitaciones.</div></div>
+
+    <div class="tbl cat"><div class="tbl-h"><b>region · comuna · rubro</b><span class="chip" style="background:#e2e8f0;color:#334155">CATÁLOGOS</span></div>
+      <table><tr><td>region</td><td><span class="k">PK</span> id · código · nombre (16 regiones)</td></tr><tr><td>comuna</td><td><span class="k">PK</span> id · <span class="fk">FK</span> region_id · nombre</td></tr><tr><td>rubro</td><td><span class="k">PK</span> id · nombre UNIQUE</td></tr></table>
+      <div class="desc">Listas controladas: evitan textos libres con errores ("Stgo", "santiago").</div></div>
+  </div>
+</section>
+
+<!-- ===================================================== LICITACIONES -->
+<section id="licitaciones">
+  <div class="eyebrow">Modelo de datos · Service Licitaciones</div>
+  <h2>Una licitación, muchas postulaciones y su chat</h2>
+  <p class="lead">Se agregan requisitos atómicos, historial de estados y el chat que se habilita al aceptar una postulación.</p>
+  <div class="diagram">
+<pre class="mermaid">
+erDiagram
+  CATEGORIA ||--o{ LICITACION_DETALLE : "clasifica"
+  LICITACION ||--|| LICITACION_DETALLE : "describe"
+  LICITACION ||--o{ LICITACION_REQUISITO : "exige"
+  LICITACION ||--o{ POSTULACION : "recibe"
+  POSTULACION ||--|| POSTULACION_DETALLE : "propone"
+  POSTULACION ||--o{ POSTULACION_HISTORIAL : "registra"
+  POSTULACION ||--o| CONVERSACION : "habilita al aceptar"
+  CONVERSACION ||--o{ MENSAJE : "contiene"
+</pre>
+  </div>
+  <div class="db-title"><h3>Tablas</h3><span class="chip db">licitawatch_licitaciones</span></div>
+  <div class="tables">
+    <div class="tbl"><div class="tbl-h"><b>licitacion</b><span class="chip ppt">PPT</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>licitador_id</td><td><span class="ref">REF</span> → Usuarios</td></tr><tr><td>titulo</td><td>texto</td></tr><tr><td>monto_estimado</td><td>numeric</td></tr><tr><td>fecha_cierre</td><td>date</td></tr><tr><td>estado</td><td>enum · borrador / publicada / cerrada / adjudicada / cancelada / suspendida</td></tr></table>
+      <div class="desc">Sin cambios respecto de la diapositiva 13.</div></div>
+
+    <div class="tbl mod"><div class="tbl-h"><b>postulacion</b><span class="chip mod">PPT · NUEVO ESTADO</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>licitacion_id</td><td><span class="fk">FK</span> → licitacion</td></tr><tr><td>pyme_id</td><td><span class="ref">REF</span> → Usuarios</td></tr><tr><td>fecha_postulacion</td><td>date</td></tr><tr><td>estado</td><td>enum · enviada / en revisión / <b>ACEPTADA</b> / seleccionada / rechazada / retirada</td></tr></table>
+      <div class="desc">UNIQUE (licitación, pyme): una Pyme postula una vez. <b>ACEPTADA</b> habilita el chat.</div></div>
+
+    <div class="tbl new"><div class="tbl-h"><b>licitacion_detalle</b><span class="chip new">SOPORTE</span></div>
+      <table><tr><td>licitacion_id</td><td><span class="k">PK</span> <span class="fk">FK</span> → licitacion (1:1)</td></tr><tr><td>descripcion · condiciones</td><td>texto</td></tr><tr><td>categoria_id</td><td><span class="fk">FK</span> → categoria</td></tr><tr><td>region_codigo</td><td><span class="ref">REF</span> catálogo región</td></tr><tr><td>destacada</td><td>bool · visibilidad</td></tr><tr><td>fecha_publicacion</td><td>timestamp</td></tr></table>
+      <div class="desc">Detalle que la PPT no modela, sin alterar la tabla oficial.</div></div>
+
+    <div class="tbl new"><div class="tbl-h"><b>licitacion_requisito</b><span class="chip new">NUEVA</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>licitacion_id</td><td><span class="fk">FK</span> → licitacion</td></tr><tr><td>descripcion</td><td>texto</td></tr><tr><td>obligatorio</td><td>bool</td></tr><tr><td>orden</td><td>entero</td></tr></table>
+      <div class="desc">Un requisito por fila (1FN). Permite checklist y que LicitAsist explique cada uno.</div></div>
+
+    <div class="tbl new"><div class="tbl-h"><b>postulacion_detalle</b><span class="chip new">SOPORTE</span></div>
+      <table><tr><td>postulacion_id</td><td><span class="k">PK</span> <span class="fk">FK</span> → postulacion (1:1)</td></tr><tr><td>propuesta</td><td>texto</td></tr><tr><td>monto_ofertado</td><td>numeric</td></tr><tr><td>plazo_entrega_dias</td><td>entero</td></tr><tr><td>comentario_licitador</td><td>texto</td></tr></table>
+      <div class="desc">La oferta de la Pyme y la respuesta del licitador.</div></div>
+
+    <div class="tbl new"><div class="tbl-h"><b>postulacion_historial</b><span class="chip new">NUEVA</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>postulacion_id</td><td><span class="fk">FK</span> → postulacion</td></tr><tr><td>estado_anterior · estado_nuevo</td><td>enum</td></tr><tr><td>usuario_id</td><td><span class="ref">REF</span> quién cambió</td></tr><tr><td>comentario · fecha</td><td>texto · timestamp</td></tr></table>
+      <div class="desc">Trazabilidad: quién aceptó, rechazó o seleccionó, y cuándo.</div></div>
+
+    <div class="tbl new"><div class="tbl-h"><b>conversacion</b><span class="chip new">NUEVA · CHAT</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>postulacion_id</td><td><span class="fk">FK</span>/UNIQUE → postulacion</td></tr><tr><td>estado</td><td>enum · abierta / cerrada</td></tr><tr><td>abierta_por_usuario_id</td><td><span class="ref">REF</span> licitador que aceptó</td></tr><tr><td>abierta_en · cerrada_en</td><td>timestamp</td></tr></table>
+      <div class="desc">Una conversación por postulación aceptada. Licitación y participantes se obtienen desde la postulación.</div></div>
+
+    <div class="tbl new"><div class="tbl-h"><b>mensaje</b><span class="chip new">NUEVA · CHAT</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>conversacion_id</td><td><span class="fk">FK</span> → conversacion</td></tr><tr><td>emisor_usuario_id</td><td><span class="ref">REF</span> pyme o licitador</td></tr><tr><td>contenido</td><td>texto</td></tr><tr><td>enviado_en · leido_en</td><td>timestamp</td></tr></table>
+      <div class="desc">Mensajes persistidos con estado de lectura.</div></div>
+
+    <div class="tbl cat"><div class="tbl-h"><b>categoria · busqueda_registro</b><span class="chip" style="background:#e2e8f0;color:#334155">APOYO</span></div>
+      <table><tr><td>categoria</td><td><span class="k">PK</span> id · nombre UNIQUE</td></tr><tr><td>busqueda_registro</td><td><span class="k">PK</span> id · <span class="ref">REF</span> usuario_id · fecha_hora</td></tr></table>
+      <div class="desc">Catálogo de categorías y conteo del límite mensual de búsquedas del plan Estándar.</div></div>
+  </div>
+</section>
+
+<!-- ===================================================== VENTAS -->
+<section id="ventas">
+  <div class="eyebrow">Modelo de datos · Service Ventas</div>
+  <h2>De la suscripción al pago — solo Pymes</h2>
+  <p class="lead">La cadena de la PPT se mantiene: plan → suscripción → venta → pago. Los beneficios y límites quedan normalizados.</p>
+  <div class="diagram">
+<pre class="mermaid">
+erDiagram
+  PLAN_SUSCRIPCION ||--|| PLAN_DETALLE : "define"
+  PLAN_SUSCRIPCION ||--o{ PLAN_BENEFICIO : "incluye"
+  PLAN_SUSCRIPCION ||--o{ SUSCRIPCION : "origina"
+  SUSCRIPCION ||--|| SUSCRIPCION_VIGENCIA : "vigencia"
+  SUSCRIPCION ||--o{ VENTA : "genera"
+  VENTA ||--|| PAGO : "se paga con"
+  PAGO ||--o| PAGO_WEBPAY : "detalle Webpay"
+</pre>
+  </div>
+  <div class="db-title"><h3>Tablas</h3><span class="chip db">licitawatch_ventas</span></div>
+  <div class="tables">
+    <div class="tbl"><div class="tbl-h"><b>plan_suscripcion</b><span class="chip ppt">PPT</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>nombre</td><td>enum · ESTÁNDAR / PREMIUM</td></tr></table></div>
+    <div class="tbl"><div class="tbl-h"><b>suscripcion</b><span class="chip ppt">PPT</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>usuario_id</td><td><span class="ref">REF</span> → Usuarios · <b>solo PYME</b></td></tr><tr><td>plan_id</td><td><span class="fk">FK</span> → plan_suscripcion</td></tr><tr><td>estado</td><td>enum · pendiente / activa / vencida / cancelada</td></tr></table>
+      <div class="desc">Una Pyme tiene como máximo una suscripción activa.</div></div>
+    <div class="tbl"><div class="tbl-h"><b>venta</b><span class="chip ppt">PPT</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>suscripcion_id</td><td><span class="fk">FK</span> → suscripcion</td></tr><tr><td>monto</td><td>numeric</td></tr><tr><td>fecha</td><td>date</td></tr></table></div>
+    <div class="tbl"><div class="tbl-h"><b>pago</b><span class="chip ppt">PPT</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>venta_id</td><td><span class="fk">FK</span>/UNIQUE → venta</td></tr><tr><td>id_transaccion</td><td>texto · token Webpay</td></tr><tr><td>pasarela</td><td>texto · Webpay Plus</td></tr><tr><td>estado</td><td>enum · pendiente / aprobado / rechazado / anulado</td></tr></table></div>
+    <div class="tbl mod"><div class="tbl-h"><b>plan_detalle</b><span class="chip mod">SOPORTE ACTUALIZADO</span></div>
+      <table><tr><td>plan_id</td><td><span class="k">PK</span> <span class="fk">FK</span> → plan (1:1)</td></tr><tr><td>precio</td><td>$0 / $24.990</td></tr><tr><td>limite_postulaciones_mes</td><td>3 / 10</td></tr><tr><td>limite_busquedas_mes</td><td>límite / sin límite</td></tr><tr><td>acceso_licitasist</td><td>no / sí</td></tr><tr><td>acceso_chat</td><td>no / sí</td></tr><tr><td>prioridad_visibilidad</td><td>no / sí</td></tr><tr><td>duracion_dias</td><td>— / 30</td></tr></table>
+      <div class="desc">Se elimina el límite de publicaciones: el licitador no paga.</div></div>
+    <div class="tbl new"><div class="tbl-h"><b>plan_beneficio</b><span class="chip new">NUEVA</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>plan_id</td><td><span class="fk">FK</span> → plan_suscripcion</td></tr><tr><td>descripcion</td><td>texto</td></tr><tr><td>orden</td><td>entero</td></tr></table>
+      <div class="desc">Un beneficio por fila, en vez de una lista dentro de un texto (corrige 1FN).</div></div>
+    <div class="tbl new"><div class="tbl-h"><b>suscripcion_vigencia</b><span class="chip new">SOPORTE</span></div>
+      <table><tr><td>suscripcion_id</td><td><span class="k">PK</span> <span class="fk">FK</span> (1:1)</td></tr><tr><td>fecha_inicio · fecha_fin</td><td>timestamp</td></tr></table></div>
+    <div class="tbl new"><div class="tbl-h"><b>pago_webpay</b><span class="chip new">SOPORTE</span></div>
+      <table><tr><td>pago_id</td><td><span class="k">PK</span> <span class="fk">FK</span> (1:1)</td></tr><tr><td>buy_order · token</td><td>UNIQUE</td></tr><tr><td>authorization_code</td><td>texto</td></tr><tr><td>card_last_digits</td><td>4 dígitos</td></tr><tr><td>response_code · transaction_date</td><td>Webpay</td></tr></table>
+      <div class="desc">Datos del comprobante. Nunca el número completo de la tarjeta ni el CVV.</div></div>
+  </div>
+</section>
+
+<!-- ===================================================== NOTIFICACIONES -->
+<section id="notificaciones">
+  <div class="eyebrow">Modelo de datos · Service Notificaciones</div>
+  <h2>Un registro por cada evento importante</h2>
+  <p class="lead">Se agregan los eventos del chat y de la aceptación de postulaciones.</p>
+  <div class="tables">
+    <div class="tbl mod"><div class="tbl-h"><b>notificacion</b><span class="chip mod">PPT · NUEVOS TIPOS</span></div>
+      <table><tr><td>id</td><td><span class="k">PK</span></td></tr><tr><td>usuario_id</td><td><span class="ref">REF</span> → Usuarios</td></tr><tr><td>tipo</td><td>enum · confirmación registro, licitación publicada, postulación recibida, <b>postulación aceptada</b>, <b>chat habilitado</b>, <b>mensaje nuevo</b>, resultado, pago confirmado / rechazado…</td></tr><tr><td>canal</td><td>email</td></tr></table></div>
+    <div class="tbl new"><div class="tbl-h"><b>notificacion_envio</b><span class="chip new">SOPORTE</span></div>
+      <table><tr><td>notificacion_id</td><td><span class="k">PK</span> <span class="fk">FK</span> (1:1)</td></tr><tr><td>destinatario · asunto · resumen</td><td>texto</td></tr><tr><td>estado</td><td>enviado / fallido</td></tr><tr><td>leida</td><td>bool</td></tr><tr><td>creado_en · enviado_en</td><td>timestamp</td></tr></table>
+      <div class="desc">Confirma el envío y alimenta la bandeja (campana) del usuario.</div></div>
+  </div>
+</section>
+
+<!-- ===================================================== REGISTRO -->
+<section id="registro">
+  <div class="eyebrow">Persistencia desde el registro</div>
+  <h2>Qué datos pide el formulario</h2>
+  <p class="lead">Los mismos bloques para ambos perfiles (son empresas) y un bloque propio de cada rol.</p>
+  <div class="grid g3">
+    <div class="box plan-card"><h3>Cuenta</h3><p>Se guarda en <code>usuario</code> y <code>credencial</code>.</p>
+      <div class="pill-list"><span>Email de acceso</span><span>Contraseña</span><span>Confirmar contraseña</span></div></div>
+    <div class="box plan-card"><h3>Datos de la empresa</h3><p>Se guarda en <code>empresa</code>, <code>direccion_empresa</code> y <code>empresa_rubro</code>.</p>
+      <div class="pill-list"><span>RUT de la empresa</span><span>Razón social</span><span>Nombre de fantasía</span><span>Giro</span><span>Teléfono</span><span>Email corporativo</span><span>Sitio web</span><span>Dirección: calle, número, región, comuna</span><span>Rubros</span></div></div>
+    <div class="box plan-card"><h3>Dueño de la empresa</h3><p>Se guarda en <code>persona</code> y <code>empresa_persona</code> (tipo DUEÑO).</p>
+      <div class="pill-list"><span>Nombres</span><span>Apellidos</span><span>RUT personal (opcional)</span><span>Email</span><span>Teléfono</span></div></div>
+    <div class="box plan-card"><h3>Contacto comercial</h3><p>Se guarda en <code>persona</code> y <code>empresa_persona</code> (tipo CONTACTO_COMERCIAL). Puede ser el mismo dueño (casilla "el contacto es el dueño").</p>
+      <div class="pill-list"><span>Nombres</span><span>Apellidos</span><span>Cargo</span><span>Email</span><span>Teléfono</span></div></div>
+    <div class="box plan-card"><h3>Solo Pyme</h3><p>Se guarda en <code>pyme</code>.</p>
+      <div class="pill-list"><span>Tamaño (micro / pequeña / mediana)</span><span>Cantidad de trabajadores</span></div></div>
+    <div class="box plan-card"><h3>Solo Licitador</h3><p>Se guarda en <code>licitador</code>.</p>
+      <div class="pill-list"><span>Tipo de organización</span></div></div>
+  </div>
+</section>
+
+<!-- ===================================================== CHAT -->
+<section id="chat">
+  <div class="eyebrow">Regla de negocio</div>
+  <h2>Cómo se activa el chat Pyme ↔ Licitador</h2>
+  <p class="lead">El chat es un beneficio Premium y solo existe después de que el licitador acepta la postulación.</p>
+  <div class="flow">
+    <div class="step"><h4>Pyme postula</h4><p>Se crea la <code>postulacion</code> en estado ENVIADA y se notifica al licitador.</p></div>
+    <div class="step"><h4>Licitador revisa</h4><p>Puede pasarla a EN_REVISION. Cada cambio queda en <code>postulacion_historial</code>.</p></div>
+    <div class="step"><h4>Licitador acepta</h4><p>La postulación pasa a <b>ACEPTADA</b>. Se verifica en Service Ventas que la Pyme sea Premium.</p></div>
+    <div class="step"><h4>Se abre el chat</h4><p>Se crea una <code>conversacion</code> (una por postulación) y ambos reciben la notificación CHAT_HABILITADO.</p></div>
+    <div class="step"><h4>Conversan</h4><p>Cada <code>mensaje</code> se guarda con su emisor y su lectura, y el receptor recibe MENSAJE_NUEVO.</p></div>
+    <div class="step"><h4>Cierre</h4><p>Al adjudicar (SELECCIONADA) el chat sigue abierto con el ganador. Si se rechaza o se retira, la conversación se cierra.</p></div>
+  </div>
+  <div class="note">Si la Pyme no es Premium, el licitador igual puede aceptar la postulación, pero el chat no se abre y la Pyme ve la invitación a contratar Premium para conversar.</div>
+</section>
+
+<!-- ===================================================== NORMALIZACIÓN -->
+<section id="normalizacion">
+  <div class="eyebrow">Calidad del modelo</div>
+  <h2>Normalización aplicada</h2>
+  <div class="grid g3">
+    <div class="box"><h3>1FN · valores atómicos</h3><ul>
+      <li>Los requisitos de una licitación van uno por fila (<code>licitacion_requisito</code>).</li>
+      <li>Los beneficios de un plan van uno por fila (<code>plan_beneficio</code>), no separados por "|".</li>
+      <li>Los rubros de una empresa van en una tabla intermedia, no en una lista dentro de un texto.</li>
+      <li>La dirección está separada en calle, número, depto y comuna.</li></ul></div>
+    <div class="box"><h3>2FN · dependencia total de la clave</h3><ul>
+      <li>La única clave compuesta es <code>empresa_rubro (empresa_id, rubro_id)</code>, que no tiene atributos parciales.</li>
+      <li>Los atributos del vínculo (cargo, principal) viven en <code>empresa_persona</code>, porque dependen de la empresa y de la persona a la vez.</li></ul></div>
+    <div class="box"><h3>3FN · sin dependencias transitivas</h3><ul>
+      <li>La región no se repite en la dirección: se obtiene desde la comuna.</li>
+      <li>El RUT y la razón social están solo en <code>empresa</code>.</li>
+      <li>Los datos del contacto están solo en <code>persona</code>, ya no en <code>pyme.nombre_contacto</code>.</li>
+      <li>La conversación no repite licitación ni participantes: los obtiene desde la postulación.</li></ul></div>
+  </div>
+</section>
+
+<!-- ===================================================== CAMBIOS -->
+<section id="cambios">
+  <div class="eyebrow">Trazabilidad con la PPT</div>
+  <h2>Cambios respecto de las diapositivas 12–15</h2>
+  <div class="cmp-wrap">
+  <table class="cmp">
+    <tr><th>Tabla</th><th>Antes (PPT)</th><th>Propuesta v2</th><th>Motivo</th></tr>
+    <tr><td>licitador</td><td>usuario_id, razon_social, rut</td><td>usuario_id, empresa_id, tipo_organizacion</td><td>Los datos legales pasan a <i>empresa</i>, común para ambos perfiles.</td></tr>
+    <tr><td>pyme</td><td>usuario_id, nombre_contacto, rut</td><td>usuario_id, empresa_id, tamaño, trabajadores</td><td>El RUT pasa a <i>empresa</i> y el contacto a <i>persona</i>.</td></tr>
+    <tr><td>administrador</td><td>usuario_id, area</td><td>+ persona_id</td><td>Nombre del administrador sin duplicar datos.</td></tr>
+    <tr><td>rol · usuario</td><td>—</td><td>Sin cambios</td><td>Núcleo de identidad intacto.</td></tr>
+    <tr><td>postulacion</td><td>estado enum</td><td>+ estado ACEPTADA</td><td>Habilita el chat.</td></tr>
+    <tr><td>suscripcion</td><td>usuario_id</td><td>Solo usuarios PYME</td><td>Solo pagan las Pymes.</td></tr>
+    <tr><td>plan</td><td>Límites de publicación</td><td>3 / 10 postulaciones, chat y LicitAsist</td><td>Nueva PPT, diapositiva 7.</td></tr>
+    <tr><td>notificacion</td><td>Tipos de evento</td><td>+ aceptada, chat, mensaje</td><td>Nuevos eventos del chat.</td></tr>
+    <tr><td>Nuevas</td><td>—</td><td>empresa, persona, empresa_persona, direccion_empresa, empresa_rubro, catálogos, licitacion_requisito, postulacion_historial, conversacion, mensaje, plan_beneficio</td><td>Persistencia completa del registro, trazabilidad y chat.</td></tr>
+  </table>
+  </div>
+</section>
+
+</main>
+
+<footer>LicitaWatch · Propuesta de modelo de datos v2 · Plataforma privada de gestión de licitaciones</footer>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true, theme: 'base', securityLevel: 'strict',
+    themeVariables: {
+      primaryColor: '#e6eefc', primaryBorderColor: '#13284b', primaryTextColor: '#13284b',
+      lineColor: '#5b6b82', fontFamily: 'Inter, system-ui, sans-serif', fontSize: '14px',
+      clusterBkg: '#f8fafc', clusterBorder: '#dbe3ee'
+    },
+    er: { useMaxWidth: false, layoutDirection: 'TB' }, flowchart: { useMaxWidth: true }
+  });
+</script>
+</body>
+</html>
